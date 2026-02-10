@@ -31,10 +31,23 @@ jobs:
     strategy:
       matrix:
         include:
-          - build: 'x64'
-            name: "rocm"
-            gpu_targets: "gfx1151;gfx1150;gfx1200;gfx1201;gfx1100;gfx1101;gfx1102;gfx1030;gfx1031;gfx1032;gfx908;gfx90a;gfx942"
-
+          - build: 'gfx90X-x64'
+            gpu_targets: "gfx906;gfx908;gfx90a"
+          - build: 'gfx94X-x64'
+            gpu_targets: "gfx942"
+        #  - build: 'gfx101X-x64'
+        #    gpu_targets: "gfx1010;gfx1011;gfx1012"
+          - build: 'gfx103X-x64'
+            # missing: gfx1032, gfx1035, gfx1036
+            gpu_targets: "gfx1030"
+          - build: 'gfx110X-x64'
+            # missing: gfx1103
+            gpu_targets: "gfx1100;gfx1101;gfx1102"
+          - build: 'gfx115X-x64'
+            # missing: gfx1152, gfx1153
+            gpu_targets: "gfx1150;gfx1151"
+          - build: 'gfx120X-x64'
+            gpu_targets: "gfx1200;gfx1201"
     steps:
       - name: Clone
         id: checkout
@@ -213,7 +226,12 @@ jobs:
             **Linux:**
             - [Ubuntu x64 (CPU)](https://github.com/ggml-org/llama.cpp/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64.tar.gz)
             - [Ubuntu x64 (Vulkan)](https://github.com/ggml-org/llama.cpp/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-x64.tar.gz)
-            - [Ubuntu x64 (ROCm)](https://github.com/ggml-org/llama.cpp/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-rocm-x64.tar.gz)
+            - [Ubuntu x64 (ROCm gfx90X)](https://github.com/ggml-org/llama.cpp/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-rocm-gfx90X-x64.tar.gz)
+            - [Ubuntu x64 (ROCm gfx94X)](https://github.com/ggml-org/llama.cpp/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-rocm-gfx94X-x64.tar.gz)
+            - [Ubuntu x64 (ROCm gfx103X)](https://github.com/ggml-org/llama.cpp/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-rocm-gfx103X-x64.tar.gz)
+            - [Ubuntu x64 (ROCm gfx110X)](https://github.com/ggml-org/llama.cpp/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-rocm-gfx110X-x64.tar.gz)
+            - [Ubuntu x64 (ROCm gfx115X)](https://github.com/ggml-org/llama.cpp/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-rocm-gfx115X-x64.tar.gz)
+            - [Ubuntu x64 (ROCm gfx120X)](https://github.com/ggml-org/llama.cpp/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-rocm-gfx120X-x64.tar.gz)
             - [Ubuntu s390x (CPU)](https://github.com/ggml-org/llama.cpp/releases/download/${{ steps.tag.outputs.name }}/llama-${{ steps.tag.outputs.name }}-bin-ubuntu-s390x.tar.gz)
 
             **Windows:**
