@@ -122,8 +122,10 @@ jobs:
           sudo mv /opt/rocm/lib/libhipblas.so* ./build/bin/
           sudo mv /opt/rocm/lib/libhipblaslt.so* ./build/bin/
           sudo mv /opt/rocm/lib/librocblas.so* ./build/bin/
+          sudo mv /opt/rocm/lib/librocroller.so* ./build/bin/
           sudo mv /opt/rocm/lib/rocblas/ ./build/bin/
           sudo mv /opt/rocm/lib/hipblaslt/ ./build/bin/
+          sudo mv /opt/rocm/lib/llvm/lib/libomp.so* ./build/bin/
 
       - name: Pack artifacts
         id: pack_artifacts
