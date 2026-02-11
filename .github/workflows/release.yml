@@ -116,13 +116,7 @@ jobs:
           cmake --build build --config Release -j $(nproc)
 
           # Move ROCm runtime libraries (to avoid double space consumption)
-          sudo mv /opt/rocm/lib/librocsparse.so* ./build/bin/
-          sudo mv /opt/rocm/lib/libhsa-runtime64.so* ./build/bin/
-          sudo mv /opt/rocm/lib/libamdhip64.so* ./build/bin/
-          sudo mv /opt/rocm/lib/libhipblas.so* ./build/bin/
-          sudo mv /opt/rocm/lib/libhipblaslt.so* ./build/bin/
-          sudo mv /opt/rocm/lib/librocblas.so* ./build/bin/
-          sudo mv /opt/rocm/lib/librocroller.so* ./build/bin/
+          sudo mv /opt/rocm/lib/lib*.so* ./build/bin/
           sudo mv /opt/rocm/lib/rocblas/ ./build/bin/
           sudo mv /opt/rocm/lib/hipblaslt/ ./build/bin/
           sudo mv /opt/rocm/lib/llvm/lib/libomp.so* ./build/bin/
