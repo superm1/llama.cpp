@@ -56,13 +56,7 @@ jobs:
         id: depends
         run: |
           sudo apt install -y build-essential git cmake wget \
-            amdrocm-core-dev7.11-gfx1151 \
-            amdrocm-core-dev7.11-gfx1150 \
-            amdrocm-core-dev7.11-gfx120x \
-            amdrocm-core-dev7.11-gfx110x \
-            amdrocm-core-dev7.11-gfx950 \
-            amdrocm-core-dev7.11-gfx94x \
-            amdrocm-core-dev7.11-gfx90x
+            amdrocm-core-dev7.11-gfx1151
 
       - name: Free disk space
         run: |
