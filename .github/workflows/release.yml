@@ -85,7 +85,7 @@ jobs:
             -DGGML_BACKEND_DL=ON \
             -DGGML_NATIVE=OFF \
             -DGGML_CPU=OFF \
-            -DAMDGPU_TARGETS="${{ matrix.gpu_targets }}" \
+            -DGPU_TARGETS="${{ matrix.gpu_targets }}" \
             -DGGML_HIP=ON \
             -DHIP_PLATFORM=amd \
             -DLLAMA_BUILD_BORINGSSL=ON
