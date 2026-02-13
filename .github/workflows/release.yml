@@ -24,14 +24,12 @@ jobs:
   ubuntu-24-rocm:
     runs-on: ubuntu-24.04
 
-    env:
-      ROCM_VERSION: "7.11.0"
-
     strategy:
       matrix:
         include:
           - gpu_targets: "gfx906;gfx908;gfx90a;gfx942;gfx950;gfx1100;gfx1101;gfx1102;gfx1150;gfx1151;gfx1152;gfx1200;gfx1201"
             build: x64
+            ROCM_VERSION: "7.11.0"
 
     steps:
       - name: Clone
@@ -43,7 +41,7 @@ jobs:
       - name: ccache
         uses: ggml-org/ccache-action@v1.2.16
         with:
-          key: ubuntu-rocm-cmake-${{ env.ROCM_VERSION }}-${{ matrix.build }}
+          key: ubuntu-rocm-cmake-${{ matrix.ROCM_VERSION }}-${{ matrix.build }}
           evict-old-files: 1d
 
       - name: Dependencies
@@ -54,7 +52,7 @@ jobs:
       - name: Set ROCm
         id: rocm_env
         run: |
-          wget https://repo.amd.com/rocm/tarball/therock-dist-linux-gfx1151-${{ env.ROCM_VERSION }}.tar.gz
+          wget https://repo.amd.com/rocm/tarball/therock-dist-linux-gfx1151-${{ matrix.ROCM_VERSION }}.tar.gz
           mkdir install
           tar -xf *.tar.gz -C install
           export ROCM_PATH=$(pwd)/install
@@ -93,8 +91,8 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v6
         with:
-          path: llama-bin-ubuntu-rocm-${{ env.ROCM_VERSION }}-${{ matrix.build }}.tar.gz
-          name: llama-bin-ubuntu-rocm-${{ env.ROCM_VERSION }}-${{ matrix.build }}.tar.gz
+          path: llama-bin-ubuntu-rocm-${{ matrix.ROCM_VERSION }}-${{ matrix.build }}.tar.gz
+          name: llama-bin-ubuntu-rocm-${{ matrix.ROCM_VERSION }}-${{ matrix.build }}.tar.gz
 
   release:
     if: ${{ ( github.event_name == 'push' && github.ref == 'refs/heads/master' ) || github.event.inputs.create_release == 'true' }}
