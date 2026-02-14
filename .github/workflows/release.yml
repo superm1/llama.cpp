@@ -21,107 +21,18 @@ env:
   CMAKE_ARGS: "-DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_TOOLS=ON -DLLAMA_BUILD_SERVER=ON -DGGML_RPC=ON"
 
 jobs:
-  ubuntu-22-rocm:
-    runs-on: ubuntu-22.04
-    container: rocm/dev-ubuntu-22.04:7.2
-
-    strategy:
-      matrix:
-        include:
-          - build: 'x64'
-            ROCM_VERSION: "7.2"
-            gpu_targets: "gfx1151;gfx1150;gfx1200;gfx1201;gfx1100;gfx1101;gfx1102;gfx1030;gfx1031;gfx1032;gfx908;gfx90a;gfx942"
-
-    steps:
-      - name: Clone
-        id: checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Dependencies
-        id: depends
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential git cmake rocblas-dev hipblas-dev libssl-dev rocwmma-dev
-
-      - name: Free disk space
-        run: |
-          # Remove preinstalled SDKs and caches not needed for this job
-          sudo rm -rf /usr/share/dotnet || true
-          sudo rm -rf /usr/local/lib/android || true
-          sudo rm -rf /opt/ghc || true
-          sudo rm -rf /usr/local/.ghcup || true
-          sudo rm -rf /opt/hostedtoolcache || true
-
-          # Build regex pattern from ${{ matrix.gpu_targets }} (match target as substring)
-          TARGET_REGEX="($(printf '%s' "${{ matrix.gpu_targets }}" | sed 's/;/|/g'))"
-
-          # Remove library files for architectures we're not building for to save disk space
-          echo "Cleaning up unneeded architecture files..."
-          cd /opt/rocm/lib/rocblas/library
-          # Keep only our target architectures
-          for file in *; do
-            if printf '%s' "$file" | grep -q 'gfx'; then
-              if ! printf '%s' "$file" | grep -Eq "$TARGET_REGEX"; then
-                echo "Removing $file" &&
-                sudo rm -f "$file";
-              fi
-            fi
-          done
-
-          cd /opt/rocm/lib/hipblaslt/library
-          for file in *; do
-            if printf '%s' "$file" | grep -q 'gfx'; then
-              if ! printf '%s' "$file" | grep -Eq "$TARGET_REGEX"; then
-                echo "Removing $file" &&
-                sudo rm -f "$file";
-              fi
-            fi
-          done
-
-          # Remove old package lists and caches
-          sudo rm -rf /var/lib/apt/lists/* || true
-          sudo apt clean
-
-      - name: Build with native CMake HIP support
-        id: cmake_build
-        run: |
-          cmake -B build -S . \
-            -DCMAKE_HIP_COMPILER="$(hipconfig -l)/clang" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DGGML_BACKEND_DL=ON \
-            -DGGML_NATIVE=OFF \
-            -DGGML_STATIC=OFF \
-            -DGPU_TARGETS="${{ matrix.gpu_targets }}" \
-            -DGGML_HIP=ON \
-            -DHIP_PLATFORM=amd \
-            -DGGML_HIP_ROCWMMA_FATTN=ON \
-            -DLLAMA_CURL=OFF \
-            -DGGML_RPC=ON \
-            -DLLAMA_BUILD_BORINGSSL=ON
-          cmake --build build --config Release -j $(nproc)
-
-      - name: Pack artifacts
-        id: pack_artifacts
-        run: |
-          tar -czvf llama-bin-ubuntu-rocm-${{ matrix.ROCM_VERSION }}-${{ matrix.build }}.tar.gz -C ./build/bin .
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v6
-        with:
-          path: llama-bin-ubuntu-rocm-${{ matrix.ROCM_VERSION }}-${{ matrix.build }}.tar.gz
-          name: llama-bin-ubuntu-rocm-${{ matrix.ROCM_VERSION }}-${{ matrix.build }}.tar.gz
-
   ubuntu-24-rocm:
     runs-on: ubuntu-24.04
 
     strategy:
       matrix:
         include:
-          - gpu_targets: "gfx906;gfx908;gfx90a;gfx942;gfx950;gfx1100;gfx1101;gfx1102;gfx1150;gfx1151;gfx1152;gfx1200;gfx1201"
+          - ROCM_VERSION: "7.11.0"
+            gpu_targets: "gfx906;gfx908;gfx90a;gfx942;gfx950;gfx1100;gfx1101;gfx1102;gfx1150;gfx1151;gfx1152;gfx1200;gfx1201"
             build: x64
-            ROCM_VERSION: "7.11.0"
+          - ROCM_VERSION: "7.2"
+            gpu_targets: "gfx1151;gfx1150;gfx1200;gfx1201;gfx1100;gfx1101;gfx1102;gfx1030;gfx1031;gfx1032;gfx908;gfx90a;gfx942"
+            build: 'x64'
 
     steps:
       - name: Clone
@@ -141,8 +52,36 @@ jobs:
         run: |
           sudo apt install -y build-essential git cmake wget
 
-      - name: Set ROCm
-        id: rocm_env
+      - name: Setup Legacy ROCm
+        if: matrix.ROCM_VERSION == '7.2'
+        id: legacy_env
+        run: |
+          # Make the directory if it doesn't exist yet.
+          # This location is recommended by the distribution maintainers.
+          sudo mkdir --parents --mode=0755 /etc/apt/keyrings
+
+          # Download the key, convert the signing-key to a full
+          # keyring required by apt and store in the keyring directory
+          wget https://repo.radeon.com/rocm/rocm.gpg.key -O - | \
+            gpg --dearmor | sudo tee /etc/apt/keyrings/rocm.gpg > /dev/null
+
+          # Create repo
+          sudo tee /etc/apt/sources.list.d/rocm.list << EOF
+          deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/${{ matrix.ROCM_VERSION }} noble main
+          EOF
+
+          sudo tee /etc/apt/preferences.d/rocm-pin-600 << EOF
+          Package: *
+          Pin: release o=repo.radeon.com
+          Pin-Priority: 600
+          EOF
+
+          sudo apt update
+          sudo apt-get install -y libssl-dev rocm-hip-sdk
+
+      - name: Setup TheRock
+        if: matrix.ROCM_VERSION != '7.2'
+        id: therock_env
         run: |
           wget https://repo.amd.com/rocm/tarball/therock-dist-linux-gfx1151-${{ matrix.ROCM_VERSION }}.tar.gz
           mkdir install
@@ -198,7 +137,6 @@ jobs:
     runs-on: ubuntu-latest
 
     needs:
-      - ubuntu-22-rocm
       - ubuntu-24-rocm
 
     steps:
