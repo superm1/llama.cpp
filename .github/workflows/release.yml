@@ -21,18 +21,18 @@ env:
   CMAKE_ARGS: "-DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_TOOLS=ON -DLLAMA_BUILD_SERVER=ON -DGGML_RPC=ON"
 
 jobs:
-  ubuntu-24-rocm:
-    runs-on: ubuntu-24.04
+  ubuntu-22-rocm:
+    runs-on: ubuntu-22.04
 
     strategy:
       matrix:
         include:
+          - ROCM_VERSION: "7.2"
+            gpu_targets: "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx1151;gfx1150;gfx1200;gfx1201"
+            build: 'x64'
           - ROCM_VERSION: "7.11.0"
             gpu_targets: "gfx906;gfx908;gfx90a;gfx942;gfx950;gfx1100;gfx1101;gfx1102;gfx1150;gfx1151;gfx1152;gfx1200;gfx1201"
             build: x64
-          - ROCM_VERSION: "7.2"
-            gpu_targets: "gfx1151;gfx1150;gfx1200;gfx1201;gfx1100;gfx1101;gfx1102;gfx1030;gfx1031;gfx1032;gfx908;gfx90a;gfx942"
-            build: 'x64'
 
     steps:
       - name: Clone
@@ -67,7 +67,7 @@ jobs:
 
           # Create repo
           sudo tee /etc/apt/sources.list.d/rocm.list << EOF
-          deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/${{ matrix.ROCM_VERSION }} noble main
+          deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/${{ matrix.ROCM_VERSION }} jammy main
           EOF
 
           sudo tee /etc/apt/preferences.d/rocm-pin-600 << EOF
@@ -137,7 +137,7 @@ jobs:
     runs-on: ubuntu-latest
 
     needs:
-      - ubuntu-24-rocm
+      - ubuntu-22-rocm
 
     steps:
       - name: Clone
